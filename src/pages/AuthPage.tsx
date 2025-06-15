@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { PhoneIcon, MicrophoneIcon, EyeIcon, EyeSlashIcon, CogIcon } from '@heroicons/react/24/outline';
+import { PhoneIcon, MicrophoneIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { AuthService } from '../services/auth';
 import { useApp } from '../contexts/AppContext';
 import toast from 'react-hot-toast';
 
 export default function AuthPage() {
-  const { mode, toggleMode, isDemo, isLive } = useApp();
-  const [isAdminSetup, setIsAdminSetup] = useState(false);
+  const { mode, toggleMode, isDemo } = useApp();
+  const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -24,15 +24,18 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      if (isAdminSetup) {
-        // One-time admin setup
+      if (isSignUp) {
+        // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
           toast.error('Passwords do not match');
+          setIsLoading(false);
           return;
         }
 
+        // Validate password length
         if (formData.password.length < 6) {
           toast.error('Password must be at least 6 characters long');
+          setIsLoading(false);
           return;
         }
 
@@ -47,7 +50,7 @@ export default function AuthPage() {
         if (error) {
           toast.error(error.message);
         } else if (user) {
-          toast.success('Admin account created successfully!');
+          toast.success('Account created! Please check your email for verification.');
         }
       } else {
         const { user, error } = await AuthService.signIn({
@@ -124,61 +127,51 @@ export default function AuthPage() {
     }
   };
 
-  // Removed unused function
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {/* Mode Toggle */}
-      <div className="absolute top-4 right-4">
-        <button
-          onClick={toggleMode}
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-            isDemo 
-              ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' 
-              : 'bg-green-100 text-green-800 hover:bg-green-200'
-          }`}
-        >
-          <CogIcon className="h-4 w-4" />
-          <span>{mode.toUpperCase()} MODE</span>
-        </button>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Header */}
         <div className="text-center">
-          <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div className="mx-auto h-20 w-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
             <div className="flex space-x-1">
               <PhoneIcon className="h-6 w-6 text-white" />
               <MicrophoneIcon className="h-6 w-6 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-slate-900">AI Call Center</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            {isAdminSetup ? 'Setup admin account' : 'Sign in to your account'}
+          <h2 className="text-3xl font-bold text-white mb-2">
+            AI CALL CENTER
+          </h2>
+          <p className="text-xl text-blue-200 mb-2">
+            Intelligent Calling Platform
+          </p>
+          <p className="text-sm text-slate-300">
+            {isSignUp ? 'Create your account' : 'Sign in to your account'}
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {isAdminSetup && (
+        {/* Form */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {isSignUp && (
               <>
                 <div>
-                  <label htmlFor="clientName" className="block text-sm font-medium text-slate-700">
-                    Full Name *
+                  <label htmlFor="clientName" className="block text-sm font-medium text-white mb-2">
+                    Full Name
                   </label>
                   <input
                     id="clientName"
                     name="clientName"
                     type="text"
-                    required
+                    required={isSignUp}
                     value={formData.clientName}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm"
                     placeholder="John Doe"
                   />
                 </div>
                 <div>
-                  <label htmlFor="companyName" className="block text-sm font-medium text-slate-700">
-                    Company Name
+                  <label htmlFor="companyName" className="block text-sm font-medium text-white mb-2">
+                    Company Name (Optional)
                   </label>
                   <input
                     id="companyName"
@@ -186,13 +179,13 @@ export default function AuthPage() {
                     type="text"
                     value={formData.companyName}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Acme Corp"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm"
+                    placeholder="Acme Inc."
                   />
                 </div>
                 <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-slate-700">
-                    Phone Number
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-white mb-2">
+                    Phone Number (Optional)
                   </label>
                   <input
                     id="phoneNumber"
@@ -200,16 +193,16 @@ export default function AuthPage() {
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
               </>
             )}
-            
+
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                Email Address *
+              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                Email Address
               </label>
               <input
                 id="email"
@@ -219,152 +212,157 @@ export default function AuthPage() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                Password *
+              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
+                Password
               </label>
-              <div className="mt-1 relative">
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete={isAdminSetup ? 'new-password' : 'current-password'}
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="block w-full px-3 py-2 pr-10 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm pr-10"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/70 hover:text-white"
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-slate-400" />
+                    <EyeSlashIcon className="h-5 w-5" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-slate-400" />
+                    <EyeIcon className="h-5 w-5" />
                   )}
                 </button>
               </div>
-              {isAdminSetup && (
-                <p className="mt-1 text-xs text-slate-500">
-                  Must be at least 6 characters long
+              {isSignUp && (
+                <p className="mt-1 text-xs text-blue-200">
+                  Must be at least 6 characters
                 </p>
               )}
             </div>
 
-            {isAdminSetup && (
+            {isSignUp && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
-                  Confirm Password *
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-2">
+                  Confirm Password
                 </label>
-                <div className="mt-1 relative">
+                <div className="relative">
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
                     autoComplete="new-password"
-                    required
+                    required={isSignUp}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 pr-10 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm pr-10"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/70 hover:text-white"
                   >
                     {showConfirmPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-slate-400" />
+                      <EyeSlashIcon className="h-5 w-5" />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-slate-400" />
+                      <EyeIcon className="h-5 w-5" />
                     )}
                   </button>
                 </div>
               </div>
             )}
-          </div>
 
-          <div>
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                  </div>
+                ) : (
+                  isSignUp ? 'Create Account' : 'Sign In'
+                )}
+              </button>
+            </div>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-blue-300 hover:text-blue-200 transition-colors"
+              >
+                {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+              </button>
+            </div>
+
+            {!isSignUp && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-blue-300 hover:text-blue-200 transition-colors"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Demo Access */}
+        {isDemo && !isSignUp && (
+          <div className="bg-blue-900/30 backdrop-blur-sm rounded-xl p-6 border border-blue-500/30">
+            <h3 className="text-lg font-medium text-white mb-3">Demo Access</h3>
+            <p className="text-sm text-blue-200 mb-4">
+              Try the platform with our demo account to explore all features without registration.
+            </p>
             <button
-              type="submit"
+              onClick={handleDemoLogin}
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-2 px-4 border border-blue-400 text-sm font-medium rounded-lg text-white hover:bg-blue-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {isAdminSetup ? 'Creating Admin Account...' : 'Signing In...'}
+                  Accessing Demo...
                 </div>
               ) : (
-                isAdminSetup ? 'Create Admin Account' : 'Sign In'
+                'Access Demo Account'
               )}
             </button>
+            <div className="mt-2 text-center">
+              <p className="text-xs text-blue-300">
+                Email: demo@example.com • Password: demo123
+              </p>
+            </div>
           </div>
+        )}
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsAdminSetup(!isAdminSetup)}
-              className="text-xs text-gray-500 hover:text-gray-400"
-              disabled={isLoading}
-            >
-              {isAdminSetup ? 'Back to Login' : 'First Time Setup'}
-            </button>
-          </div>
-
-          {!isAdminSetup && (
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={handleForgotPassword}
-                className="text-sm text-slate-600 hover:text-slate-500"
-                disabled={isLoading}
-              >
-                Forgot your password?
-              </button>
-            </div>
-          )}
-
-          {isDemo && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-800 font-medium">Demo Access</p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Try the platform with demo data
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleDemoLogin}
-                  disabled={isLoading}
-                  className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors disabled:opacity-50"
-                >
-                  Demo Login
-                </button>
-              </div>
-            </div>
-          )}
-
-          {isLive && (
-            <div className="mt-6 p-4 bg-green-50 rounded-lg">
-              <div className="text-center">
-                <p className="text-sm text-green-800 font-medium">Live Mode</p>
-                <p className="text-xs text-green-600 mt-1">
-                  Connected to live Supabase database
-                </p>
-              </div>
-            </div>
-          )}
-        </form>
+        {/* Mode Toggle */}
+        <div className="text-center">
+          <button
+            onClick={toggleMode}
+            className="text-xs text-slate-400 hover:text-slate-300 transition-colors"
+          >
+            {mode === 'demo' ? 'Switch to Live Mode' : 'Switch to Demo Mode'}
+          </button>
+        </div>
       </div>
     </div>
   );
